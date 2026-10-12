@@ -1,0 +1,25 @@
+### Working from the start
+GET http://localhost:8080/api/hello
+Accept: application/json
+
+### Works after TODO 2 and TODO 3
+GET http://localhost:8080/api/ideas
+Accept: application/json
+
+### Works after TODO 4 through TODO 6
+POST http://localhost:8080/api/ideas
+Content-Type: application/json
+
+{"title":"Start a robotics club","category":"clubs"}
+
+### After implementation expect 400 and no new idea
+POST http://localhost:8080/api/ideas
+Content-Type: application/json
+
+{"title":"   ","category":"clubs"}
+
+### After implementation expect 400 for malformed JSON
+POST http://localhost:8080/api/ideas
+Content-Type: application/json
+
+{"title": "Broken JSON", "category": }
