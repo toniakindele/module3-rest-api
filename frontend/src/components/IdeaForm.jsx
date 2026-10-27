@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { isValidTitle } from "../validation.mjs"; // Adjust path if validation.mjs is outside src/components/
+import { isValidTitle } from "../validation.mjs"; 
 
 export default function IdeaForm({ onAddIdea }) {
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("clubs"); // Default to the first valid option
+  const [category, setCategory] = useState("clubs"); 
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Use the pure validation helper to reject empty or spaces-only inputs
+    
     if (!isValidTitle(title) || !category || isSaving) return;
 
     setIsSaving(true);
@@ -20,7 +20,7 @@ export default function IdeaForm({ onAddIdea }) {
 
     if (wasSuccessful) {
       setTitle("");
-      setCategory("clubs"); // Reset to standard fallback
+      setCategory("clubs"); 
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
