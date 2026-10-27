@@ -1,7 +1,7 @@
 export default function IdeaSummary({ ideas }) {
   const totalCount = ideas.length;
   
-  // Create an array of distinct, unique category labels
+  
   const categories = [...new Set(ideas.map((i) => i.category).filter(Boolean))];
 
   return (
