@@ -37,6 +37,7 @@ class IdeaStore:
                 title=request.title,
                 category=request.category,
             )
+            
     def delete(self, idea_id: int) -> bool:
         with closing(self._connect()) as conn:
             cursor = conn.execute(
