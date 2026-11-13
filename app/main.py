@@ -1,3 +1,7 @@
+import os
+import sqlite3
+from contextlib import closing
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -5,7 +9,31 @@ from app.models import Idea, IdeaRequest
 from app.store import IdeaStore
 from fastapi.middleware.cors import CORSMiddleware
 
+
+def connect():
+    path = Path(os.environ.get("DB_PATH", "data/ideas.db"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def initialize():
+    schema = Path(__file__).with_name("schema.sql").read_text()
+    with closing(connect()) as conn:
+        conn.executescript(schema)
+        count = conn.execute("SELECT COUNT(*) FROM ideas").fetchone()[0]
+        if count == 0:
+            conn.executemany(
+                "INSERT INTO ideas (id, title, category) VALUES (?, ?, ?)",
+                [
+                    (1, "Start a coding club", "clubs"),
+                    (2, "Create a campus garden", "environment"),
+                ],
+            )
+        conn.commit()
+
 def create_app() -> FastAPI:
+    initialize()
     app = FastAPI(title="Campus Idea Board")
     store = IdeaStore()  # Fresh store per app; test clients can be isolated.
 
@@ -44,8 +72,12 @@ def create_app() -> FastAPI:
         return store.add(request)
 
     @app.delete("/api/ideas/{idea_id}")
-    async def delete_idea(idea_id: int):
+    def delete_idea(idea_id: int):
+        deleted = store.delete(idea_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Idea not found")
         return {"message": "Idea successfully removed"}
+
     
     return app
 
