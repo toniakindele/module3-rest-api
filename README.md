@@ -12,7 +12,8 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 
 # Boot up the Uvicorn ASGI server with hot reloading enabled on port 8080
-python -m uvicorn app.main:app --port 8080 --reload
+python -m uvicorn app.main:app --reload --port 8080
+
 ```
 *Verify the backend is live by opening your browser to:* `http://localhost:8080/api/hello`
 
@@ -49,6 +50,48 @@ To run your pure string validation checks on the client side, use the native, ze
 cd frontend
 node --test tests/validation.test.mjs
 ```
+## Running with Docker
+
+### Build, Start, and Stop Commands
+From the project root directory (where `compose.yaml` is located), run the following commands:
+
+```bash
+# Build the image and start the container in the background
+docker compose up -d --build
+
+# Check that the container is running
+docker compose ps
+
+# Stop and remove the running container
+docker compose down
+```
+
+### Access URL & Host-Port Change
+* **Base API URL:** `http://127.0.0.1:8081` (or `http://localhost:8081`)
+* **Interactive API Docs (Swagger UI):** `http://localhost:8081/docs`
+* **Host-Port Note:** The host port was changed from `8080` to **`8081`** (`127.0.0.1:8081:8080` in `compose.yaml`) to avoid a port conflict with local processes already occupying port `8080`. Inside the container, the application still listens on port `8080`.
+
+### Running Automated Tests
+With your Python virtual environment active, run the backend test suite from the project root:
+
+```bash
+python -m pytest -v
+```
+---
+
+## Docker Concepts Q&A
+
+* **What is a Docker image?**  
+  A Docker image is a read-only, standalone blueprint or template that packages everything an application needs to run—including the operating system layer, Python runtime, installed dependencies, and source code.
+
+* **What is a Docker container?**  
+  A Docker container is a live, runnable instance created from a Docker image. It runs as an isolated process on your machine with its own temporary writable filesystem and network configuration.
+
+* **Why did your POST data disappear after replacing the container?**  
+  Containers have an ephemeral (temporary) writable layer by default, and this API stores data in memory/container storage without a persistent Docker volume mounted. When `docker compose down` or a rebuild destroys and replaces the container, its writable filesystem and in-memory state are wiped, resetting the new container back to the clean initial state of the image.
+
+
+
 
 
 
