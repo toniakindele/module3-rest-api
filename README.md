@@ -65,12 +65,15 @@ docker compose ps
 # Stop and remove the running container
 docker compose down
 ```
+### Host URL, Port Mapping & Database Paths
+* **Local Uvicorn Setup:**
+  * **Host URL:** `http://localhost:8080` (API endpoints at `http://localhost:8080/api/ideas`)
+  * **Database Path:** `data/ideas.db` 
+* **Docker Container Setup:**
+  * **Host URL & Port Mapping:** `http://localhost:8081` (mapped from container port `8080` to host port `8081` via `8081:8080` to avoid conflicts with local processes running on `8080`)
+  * **Database Path:** `/app/data/ideas.db` (backed by a persistent Docker volume)
 
-### Access URL & Host-Port Change
-* **Base API URL:** `http://127.0.0.1:8081` (or `http://localhost:8081`)
-* **Interactive API Docs (Swagger UI):** `http://localhost:8081/docs`
-* **Host-Port Note:** The host port was changed from `8080` to **`8081`** (`127.0.0.1:8081:8080` in `compose.yaml`) to avoid a port conflict with local processes already occupying port `8080`. Inside the container, the application still listens on port `8080`.
-
+---
 ### Running Automated Tests
 With your Python virtual environment active, run the backend test suite from the project root:
 
@@ -89,7 +92,31 @@ python -m pytest -v
 
 * **Why did your POST data disappear after replacing the container?**  
   Containers have an ephemeral (temporary) writable layer by default, and this API stores data in memory/container storage without a persistent Docker volume mounted. When `docker compose down` or a rebuild destroys and replaces the container, its writable filesystem and in-memory state are wiped, resetting the new container back to the clean initial state of the image.
+---
 
+### Database File Paths
+* **Local database path:** `data/ideas.db` (relative to the project root, or overridden via the `DB_PATH` environment variable)
+* **Docker container database path:** `/app/data/ideas.db` (backed by a persistent Docker volume)
+
+---
+
+### `ideas` Table Columns
+Defined in `app/schema.sql`:
+* **`id`** (`INTEGER PRIMARY KEY`): Auto-incrementing unique identifier for each idea.
+* **`title`** (`TEXT NOT NULL CHECK(length(trim(title)) > 0)`): Non-empty title of the idea.
+* **`category`** (`TEXT NOT NULL CHECK(length(trim(category)) > 0)`): Non-empty category name for the idea.
+
+---
+
+### How the Table Is Created & Preserved
+* **Application code creating the table:** On startup, `create_app()` in `app/main.py` calls `initialize()`, which reads `app/schema.sql` and runs `conn.executescript(schema)` to create the `ideas` table if it does not already exist (and seeds the two starter ideas if the table is empty).
+* **YAML setting preserving the database:** In `docker-compose.yml`, the **`volumes:`** mapping under the `api` service (mounting a named volume or host directory to `/app/data`) preserves `ideas.db` outside the container's ephemeral filesystem.
+
+---
+
+### Why Data Disappeared in Assignment 1 vs. Now
+* **In Assignment 1:** `IdeaStore` stored ideas in a Python list (`self._ideas`) in the server's RAM. Whenever the Uvicorn process stopped or restarted, that memory was cleared and the list reset to its initial state.
+* **Now:** `IdeaStore` in `app/store.py` writes every `INSERT` and `DELETE` directly to a SQLite database file (`data/ideas.db`) on disk—and in Docker, the `volumes:` configuration persists `/app/data` across container restarts and rebuilds.
 
 
 
