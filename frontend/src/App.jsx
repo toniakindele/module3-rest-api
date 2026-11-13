@@ -9,7 +9,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [isReadError, setIsReadError] = useState(false); 
 
-  const API_URL = "http://localhost:8080/api/ideas";
+  const API_URL = "http://localhost:8081/api/ideas";
   const LOCAL_STORAGE_KEY = "toni_campus_board_ideas";
 
   useEffect(() => {
